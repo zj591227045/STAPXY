@@ -1,0 +1,22 @@
+{
+  "name": "static-proxy-client",
+  "version": "1.0.0",
+  "description": "内网站点连接客户端",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "node-fetch": "^3.3.2"
+  },
+  "keywords": [
+    "proxy",
+    "tunnel",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT"
+}

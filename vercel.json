@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/websocket",
+      "dest": "/api/websocket"
+    },
+    {
+      "src": "/api/proxy",
+      "dest": "/api/proxy"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "functions": {
+    "src/app/api/websocket/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/proxy/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "PROXY_ROUTES": "site1:a1.yourdomain.com:http://localhost:3001,site2:a2.yourdomain.com:http://localhost:3002,site3:a3.yourdomain.com:http://localhost:3003"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "admin": {
+    "password": "your-admin-password",
+    "sessionTimeout": 3600000
+  },
+  "auth": {
+    "mode": "single",
+    "singleKey": {
+      "key": "sk-your-universal-access-key",
+      "description": "通用访问密钥，所有客户端使用此密钥"
+    },
+    "multiKeys": {
+      "domainMappings": [],
+      "fallbackKey": {
+        "key": "",
+        "description": ""
+      }
+    }
+  },
+  "proxy": {
+    "maxConnections": 100,
+    "heartbeatInterval": 30000,
+    "connectionTimeout": 60000
+  }
+}

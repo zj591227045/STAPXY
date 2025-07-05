@@ -1,0 +1,41 @@
+{
+  "admin": {
+    "password": "admin123456",
+    "sessionTimeout": 3600000
+  },
+  "auth": {
+    "mode": "single",
+    "singleKey": {
+      "key": "sk-universal-access-key",
+      "description": "通用访问密钥，所有客户端使用此密钥"
+    },
+    "multiKeys": {
+      "domainMappings": [
+        {
+          "subdomain": "site1.example.com",
+          "accessKey": "sk-site1-specific-key",
+          "description": "站点1专用密钥"
+        },
+        {
+          "subdomain": "site2.example.com",
+          "accessKey": "sk-site2-specific-key",
+          "description": "站点2专用密钥"
+        },
+        {
+          "subdomain": "api.example.com",
+          "accessKey": "sk-api-specific-key",
+          "description": "API服务专用密钥"
+        }
+      ],
+      "fallbackKey": {
+        "key": "sk-fallback-access-key",
+        "description": "备用密钥，用于未预定义的域名"
+      }
+    }
+  },
+  "proxy": {
+    "maxConnections": 100,
+    "heartbeatInterval": 30000,
+    "connectionTimeout": 60000
+  }
+}

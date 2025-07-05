@@ -1,0 +1,38 @@
+{
+  "name": "static-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js",
+    "dev-next": "next dev --turbopack",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js",
+    "start-next": "next start",
+    "lint": "next lint",
+    "setup-test": "bash scripts/test-setup.sh",
+    "start-test-sites": "bash scripts/start-test-sites.sh",
+    "stop-test-sites": "bash scripts/stop-test-sites.sh",
+    "test-client": "cd client && node examples/site1.js",
+    "ws-server": "node scripts/websocket-server.js"
+  },
+  "dependencies": {
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
+    "next": "^15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

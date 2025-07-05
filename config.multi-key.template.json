@@ -1,0 +1,46 @@
+{
+  "admin": {
+    "password": "your-admin-password",
+    "sessionTimeout": 3600000
+  },
+  "auth": {
+    "mode": "multi",
+    "singleKey": {
+      "key": "",
+      "description": ""
+    },
+    "multiKeys": {
+      "domainMappings": [
+        {
+          "subdomain": "app1.yourdomain.com",
+          "accessKey": "sk-app1-access-key-here",
+          "description": "应用1专用密钥"
+        },
+        {
+          "subdomain": "app2.yourdomain.com",
+          "accessKey": "sk-app2-access-key-here",
+          "description": "应用2专用密钥"
+        },
+        {
+          "subdomain": "api.yourdomain.com",
+          "accessKey": "sk-api-access-key-here",
+          "description": "API服务专用密钥"
+        },
+        {
+          "subdomain": "admin.yourdomain.com",
+          "accessKey": "sk-admin-access-key-here",
+          "description": "管理后台专用密钥"
+        }
+      ],
+      "fallbackKey": {
+        "key": "sk-fallback-access-key-here",
+        "description": "备用密钥，用于未预定义的域名"
+      }
+    }
+  },
+  "proxy": {
+    "maxConnections": 100,
+    "heartbeatInterval": 30000,
+    "connectionTimeout": 60000
+  }
+}
