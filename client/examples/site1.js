@@ -10,7 +10,7 @@ const client = new ProxyClient({
   targetUrl: 'http://100.64.0.10:8080',             // 内网站点地址
   accessKey: 'sk-universal-access-key',           // 单密钥模式：使用通用密钥
   reconnectInterval: 5000,                        // 重连间隔（毫秒）
-  heartbeatInterval: 30000                        // 心跳间隔（毫秒）
+  heartbeatInterval: 60000                        // 心跳间隔（毫秒）- 增加到60秒
 });
 
 // 处理进程退出

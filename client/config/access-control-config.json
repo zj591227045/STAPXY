@@ -1,0 +1,62 @@
+{
+  "accessControl": {
+    "site1": {
+      "ipWhitelist": [
+        "192.168.1.100",
+        "192.168.1.101",
+        "10.0.0.0/8"
+      ],
+      "ipBlacklist": [
+        "192.168.1.200",
+        "203.0.113.0/24"
+      ],
+      "rateLimit": {
+        "maxRequests": 100,
+        "windowMs": 60000,
+        "message": "请求过于频繁，请稍后再试"
+      },
+      "timeWindow": {
+        "start": "09:00",
+        "end": "18:00",
+        "timezone": "Asia/Shanghai"
+      },
+      "customRules": [
+        {
+          "type": "header",
+          "action": "deny",
+          "condition": {
+            "name": "user-agent",
+            "pattern": "bot|crawler|spider"
+          },
+          "description": "阻止爬虫访问"
+        },
+        {
+          "type": "path",
+          "action": "deny",
+          "condition": {
+            "pattern": "^/admin/"
+          },
+          "description": "阻止访问管理路径"
+        }
+      ]
+    },
+    "site2": {
+      "rateLimit": {
+        "maxRequests": 50,
+        "windowMs": 60000,
+        "message": "API 调用频率限制"
+      },
+      "customRules": [
+        {
+          "type": "header",
+          "action": "allow",
+          "condition": {
+            "name": "authorization",
+            "pattern": "Bearer .+"
+          },
+          "description": "需要 Bearer Token 认证"
+        }
+      ]
+    }
+  }
+}

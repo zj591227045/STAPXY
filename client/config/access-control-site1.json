@@ -1,0 +1,93 @@
+{
+  "enabled": true,
+  "rules": {
+    "ipWhitelist": [
+      "192.168.1.0/24",
+      "10.0.0.0/8",
+      "172.16.0.0/12"
+    ],
+    "ipBlacklist": [
+      "192.168.1.200",
+      "203.0.113.0/24"
+    ],
+    "rateLimit": {
+      "enabled": true,
+      "maxRequests": 100,
+      "windowMs": 60000,
+      "message": "请求过于频繁，请稍后再试"
+    },
+    "timeWindow": {
+      "enabled": true,
+      "start": "09:00",
+      "end": "18:00",
+      "timezone": "Asia/Shanghai"
+    },
+    "pathRules": [
+      {
+        "pattern": "^/admin/",
+        "action": "deny",
+        "description": "禁止访问管理路径"
+      },
+      {
+        "pattern": "^/api/internal/",
+        "action": "deny",
+        "description": "禁止访问内部API"
+      },
+      {
+        "pattern": "^/health$",
+        "action": "allow",
+        "description": "允许健康检查"
+      }
+    ],
+    "headerRules": [
+      {
+        "header": "user-agent",
+        "pattern": "bot|crawler|spider|scraper",
+        "action": "deny",
+        "description": "阻止爬虫和机器人"
+      },
+      {
+        "header": "x-forwarded-for",
+        "pattern": "^192\\.168\\.",
+        "action": "allow",
+        "description": "允许内网转发"
+      }
+    ],
+    "customRules": [
+      {
+        "name": "block_suspicious_requests",
+        "description": "阻止可疑请求",
+        "conditions": {
+          "method": "POST",
+          "path_contains": "upload",
+          "missing_headers": ["authorization"]
+        },
+        "action": "deny"
+      }
+    ]
+  },
+  "logging": {
+    "enabled": true,
+    "logLevel": "info",
+    "logFile": "./logs/access-site1.log",
+    "maxLogSize": 10000,
+    "logRotation": {
+      "enabled": true,
+      "maxFiles": 7,
+      "maxSize": "10MB"
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "alertThresholds": {
+      "blockedRequestsPerMinute": 50,
+      "errorRatePercent": 10,
+      "responseTimeMs": 5000
+    },
+    "webhooks": {
+      "enabled": false,
+      "url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+      "events": ["high_block_rate", "high_error_rate"]
+    }
+  }
+}

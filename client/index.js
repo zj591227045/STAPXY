@@ -2,6 +2,7 @@
 
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
+import { ClientAccessControl } from './lib/access-control.js';
 import { URL } from 'url';
 
 class ProxyClient {
@@ -22,6 +23,10 @@ class ProxyClient {
     this.heartbeatTimer = null;
     this.reconnectTimer = null;
     this.pendingRequests = new Map();
+
+    // 初始化访问控制
+    this.accessControl = new ClientAccessControl(`./config/access-control-${this.config.siteId}.json`);
+    console.log('🛡️ 访问控制系统已初始化');
   }
 
   async start() {
@@ -148,8 +153,10 @@ class ProxyClient {
           
         case 'registered':
           console.log(`✅ 站点注册成功: ${message.subdomain} -> ${message.targetUrl}`);
-          // 注册成功后启动心跳
-          this.startHeartbeat();
+          // 注册成功后延迟启动心跳，避免立即发送导致连接问题
+          setTimeout(() => {
+            this.startHeartbeat();
+          }, 2000); // 延迟2秒启动心跳
           break;
           
         case 'heartbeat_ack':
@@ -175,7 +182,36 @@ class ProxyClient {
   async handleProxyRequest(request) {
     try {
       console.log(`🔄 处理请求: ${request.method} ${request.url}`);
-      
+
+      // 访问控制检查
+      const accessResult = this.accessControl.checkAccess({
+        clientIP: request.headers['x-forwarded-for'] || request.headers['x-real-ip'] || 'unknown',
+        method: request.method,
+        url: request.url,
+        headers: request.headers
+      });
+
+      if (!accessResult.allowed) {
+        console.log(`🚫 请求被拒绝: ${accessResult.reason}`);
+
+        // 发送拒绝响应
+        const errorResponse = {
+          id: request.id,
+          status: accessResult.statusCode || 403,
+          headers: { 'content-type': 'text/plain; charset=utf-8' },
+          body: accessResult.reason || 'Access Denied',
+          timestamp: Date.now()
+        };
+
+        const responseMessage = {
+          type: 'response',
+          data: errorResponse
+        };
+
+        this.sendMessage(responseMessage);
+        return;
+      }
+
       // 构建完整的目标URL
       const targetUrl = new URL(request.url, this.config.targetUrl);
       

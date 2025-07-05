@@ -1,7 +1,12 @@
 {
   "admin": {
     "password": "your-admin-password",
-    "sessionTimeout": 3600000
+    "sessionTimeout": 3600000,
+    "domain": "admin.yourdomain.com",
+    "allowedOrigins": [
+      "https://yourdomain.com",
+      "https://admin.yourdomain.com"
+    ]
   },
   "auth": {
     "mode": "multi",

@@ -49,15 +49,15 @@ npm install
 
 **单密钥模式（推荐个人使用）：**
 ```bash
-cp config.single-key.template.json config.json
+cp config/config.single-key.template.json config/config.json
 ```
 
 **多密钥模式（推荐企业使用）：**
 ```bash
-cp config.multi-key.template.json config.json
+cp config/config.multi-key.template.json config/config.json
 ```
 
-然后编辑 `config.json` 文件，设置管理员密码和访问密钥。
+然后编辑 `config/config.json` 文件，设置管理员密码和访问密钥。
 
 详细配置说明请参考：[配置指南](./CONFIG_GUIDE.md)
 
@@ -219,23 +219,32 @@ node index.js
 
 ```
 static-proxy/
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── websocket/     # WebSocket API端点
-│   │   │   └── proxy/         # 代理API端点
+├── src/                       # Next.js 应用源码
+│   ├── app/                   # App Router 页面
+│   │   ├── api/websocket/     # WebSocket API端点
 │   │   ├── page.tsx           # 管理界面
 │   │   └── layout.tsx
-│   ├── lib/
+│   ├── lib/                   # 工具库
 │   │   ├── connection-manager.ts  # 连接管理器
 │   │   └── subdomain-router.ts   # 子域名路由器
-│   ├── types/
-│   │   └── index.ts           # 类型定义
+│   ├── types/                 # 类型定义
 │   └── middleware.ts          # Next.js中间件
-├── client/
-│   ├── index.js               # 客户端主程序
-│   ├── examples/              # 示例配置
-│   └── README.md
+├── client/                    # 客户端代码
+│   ├── config/                # 配置文件目录
+│   │   ├── README.md          # 配置说明
+│   │   ├── site-template.json # 配置模板
+│   │   └── access-control-*.json  # 站点配置
+│   ├── examples/              # 使用示例
+│   ├── lib/                   # 客户端库
+│   ├── tools/                 # 管理工具
+│   └── index.js               # 主客户端
+├── server/                    # 服务器代码
+│   └── server.js              # WebSocket 服务器
+├── config/                    # 服务器配置
+│   ├── config.json            # 主配置文件
+│   ├── config.single-key.template.json  # 单密钥模板
+│   └── config.multi-key.template.json   # 多密钥模板
+├── docs/                      # 项目文档
 ├── vercel.json                # Vercel部署配置
 └── README.md
 ```

@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "node server/server.js",
     "dev-next": "next dev --turbopack",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
+    "start": "NODE_ENV=production node server/server.js",
     "start-next": "next start",
     "lint": "next lint",
     "setup-test": "bash scripts/test-setup.sh",

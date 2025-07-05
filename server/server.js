@@ -12,6 +12,8 @@ const { WebSocketServer } = require('ws');
 const fs = require('fs');
 const path = require('path');
 
+// 访问控制现在由客户端管理，服务器保持静态
+
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = process.env.PORT || 3000;
@@ -25,7 +27,7 @@ const connections = new Map(); // siteId -> { websocket, route }
 const routes = new Map(); // subdomain -> route
 
 // 配置管理
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const CONFIG_PATH = path.join(__dirname, '../config/config.json');
 
 function loadConfig() {
   try {
@@ -96,8 +98,15 @@ app.prepare().then(() => {
       
       // 检查是否是代理请求
       const host = req.headers.host;
-      if (host && host !== `localhost:${port}` && host !== `127.0.0.1:${port}`) {
-        // 这是一个代理请求
+
+      // 检查是否是管理域名
+      const isAdminDomain = host && (
+        host.startsWith('admin.localhost') ||
+        host.startsWith('admin.yourdomain.com')
+      );
+
+      if (host && host !== `localhost:${port}` && host !== `127.0.0.1:${port}` && !isAdminDomain) {
+        // 这是一个代理请求（排除管理域名）
         await handleProxyRequest(req, res, host);
         return;
       }
@@ -164,7 +173,11 @@ app.prepare().then(() => {
     });
 
     ws.on('close', (code, reason) => {
-      console.log(`🔌 WebSocket 连接关闭: code=${code}, reason=${reason.toString()}`);
+      console.log(`🔌 WebSocket 连接关闭 (${siteId || 'unknown'})`);
+      console.log(`   code: ${code}`);
+      console.log(`   reason: ${reason.toString()}`);
+      console.log(`   wasClean: ${code === 1000}`);
+
       if (siteId) {
         console.log(`🔌 站点 ${siteId} 断开连接`);
         connections.delete(siteId);
@@ -187,9 +200,11 @@ app.prepare().then(() => {
   });
 
   function handleRegister(message, ws, config) {
+    console.log(`🔍 处理注册请求:`, JSON.stringify(message, null, 2));
     const { siteId: msgSiteId, targetUrl, accessKey, subdomain } = message;
-    
+
     if (!msgSiteId || !targetUrl || !accessKey || !subdomain) {
+      console.log(`❌ 注册失败: 缺少必需字段`);
       ws.send(JSON.stringify({
         type: 'error',
         message: 'Missing required fields: siteId, targetUrl, accessKey, subdomain'
@@ -197,7 +212,9 @@ app.prepare().then(() => {
       return null;
     }
 
+    console.log(`🔑 验证访问密钥: ${accessKey} for ${subdomain}`);
     if (!verifyAccessKey(accessKey, subdomain, config)) {
+      console.log(`❌ 注册失败: 访问密钥无效`);
       ws.send(JSON.stringify({
         type: 'error',
         message: 'Invalid access key for this subdomain'
@@ -205,7 +222,9 @@ app.prepare().then(() => {
       return null;
     }
 
+    console.log(`🏠 检查子域名可用性: ${subdomain} for ${msgSiteId}`);
     if (!isSubdomainAvailable(subdomain, msgSiteId)) {
+      console.log(`❌ 注册失败: 子域名已被使用`);
       ws.send(JSON.stringify({
         type: 'error',
         message: 'Subdomain already in use'
@@ -219,19 +238,29 @@ app.prepare().then(() => {
       targetUrl,
       accessKey,
       createdAt: Date.now(),
-      lastActive: Date.now()
+      lastActive: Date.now(),
+      readyAt: Date.now() + 5000  // 5秒后才允许处理代理请求
     };
 
+    console.log(`💾 存储连接和路由信息...`);
     connections.set(msgSiteId, { websocket: ws, route });
     routes.set(subdomain, route);
+    console.log(`✅ 连接和路由已存储`);
 
-    ws.send(JSON.stringify({
-      type: 'registered',
-      siteId: msgSiteId,
-      subdomain,
-      targetUrl,
-      timestamp: Date.now()
-    }));
+    console.log(`📤 发送注册成功响应...`);
+    try {
+      ws.send(JSON.stringify({
+        type: 'registered',
+        siteId: msgSiteId,
+        subdomain,
+        targetUrl,
+        timestamp: Date.now()
+      }));
+      console.log(`✅ 注册响应已发送`);
+    } catch (error) {
+      console.error(`❌ 发送注册响应失败:`, error.message);
+      return null;
+    }
 
     console.log(`✅ 站点 ${msgSiteId} 已注册: ${subdomain} -> ${targetUrl}`);
     console.log(`📊 当前活跃连接数: ${connections.size}`);
@@ -281,9 +310,35 @@ app.prepare().then(() => {
     // 更新最后活跃时间
     route.lastActive = Date.now();
 
+    // 检查站点是否准备就绪
+    const now = Date.now();
+    if (route.readyAt && now < route.readyAt) {
+      console.log(`⏳ 站点还未准备就绪，等待 ${Math.ceil((route.readyAt - now) / 1000)} 秒`);
+      res.statusCode = 503;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Retry-After', Math.ceil((route.readyAt - now) / 1000));
+      res.end(`
+        <html>
+          <head><title>503 - 站点准备中</title></head>
+          <body>
+            <h1>503 - 站点准备中</h1>
+            <p>站点 <strong>${route.siteId}</strong> 正在初始化，请稍后再试。</p>
+            <p>预计 ${Math.ceil((route.readyAt - now) / 1000)} 秒后可用。</p>
+          </body>
+        </html>
+      `);
+      return;
+    }
+
     // 获取对应的 WebSocket 连接
     const connection = connections.get(route.siteId);
+    console.log(`🔍 检查连接状态:`);
+    console.log(`   connection exists: ${!!connection}`);
+    console.log(`   websocket readyState: ${connection?.websocket?.readyState}`);
+    console.log(`   expected readyState: 1 (OPEN)`);
+
     if (!connection || connection.websocket.readyState !== 1) {
+      console.log(`❌ 连接不可用，返回 503 错误`);
       res.statusCode = 503;
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.end(`
@@ -293,6 +348,7 @@ app.prepare().then(() => {
             <h1>503 - 服务不可用</h1>
             <p>站点 <strong>${route.siteId}</strong> 的客户端连接已断开。</p>
             <p>请检查客户端是否正常运行。</p>
+            <p>连接状态: ${connection?.websocket?.readyState || 'N/A'}</p>
           </body>
         </html>
       `);
