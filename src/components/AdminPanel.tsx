@@ -23,13 +23,22 @@ interface RouteStats {
     siteId: string;
     subdomain: string;
     targetUrl: string;
+    createdAt?: number;
+    lastActive?: number;
     description?: string;
   }>;
 }
 
 interface SystemStatus {
   connections: ConnectionStats;
-  routes: RouteStats;
+  routes: Array<{
+    siteId: string;
+    subdomain: string;
+    targetUrl: string;
+    createdAt?: number;
+    lastActive?: number;
+    description?: string;
+  }>;
   timestamp: number;
 }
 
@@ -276,7 +285,7 @@ export default function AdminPanel({ onLogout }: AdminPanelProps) {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between">
                       <span>活跃路由数:</span>
-                      <span className="font-mono">{status.routes.totalRoutes}</span>
+                      <span className="font-mono">{status.routes.length}</span>
                     </div>
                   </div>
                   

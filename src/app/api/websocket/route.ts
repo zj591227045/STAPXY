@@ -1,13 +1,25 @@
-// WebSocket API端点 - 处理内网站点连接
-import { NextRequest } from 'next/server';
-import { connectionManager, DynamicRoute } from '@/lib/connection-manager';
-import { subdomainRouter } from '@/lib/subdomain-router';
+// WebSocket API端点 - 处理内网站点连接（开发环境）或返回轮询信息（生产环境）
+import { NextRequest, NextResponse } from 'next/server';
+import { getConnectionManager, isServerlessEnvironment } from '@/lib/environment';
+import { DynamicRoute } from '@/types';
 import { WebSocketMessage, RegisterMessage } from '@/types';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { configManager } from '@/lib/config-manager';
 import { verifyAccessKey } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
+  // 在serverless环境中，返回轮询信息而不是WebSocket升级
+  if (isServerlessEnvironment()) {
+    return NextResponse.json({
+      success: true,
+      message: 'WebSocket not supported in serverless environment',
+      alternative: {
+        pollEndpoint: '/api/client/poll',
+        responseEndpoint: '/api/client/response',
+        method: 'Use HTTP polling instead of WebSocket'
+      },
+      timestamp: Date.now()
+    });
+  }
+
   // 检查是否为WebSocket升级请求
   const upgrade = request.headers.get('upgrade');
   if (upgrade !== 'websocket') {
@@ -15,8 +27,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 在Vercel Edge Runtime中，我们需要使用不同的方式处理WebSocket
-    // 这里我们返回一个特殊的响应，实际的WebSocket处理会在Edge Function中进行
+    // 在开发环境中，返回WebSocket升级响应
+    // 实际的WebSocket处理逻辑在server/server.js中
     return new Response(null, {
       status: 101,
       headers: {
@@ -30,10 +42,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 处理WebSocket连接的辅助函数
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// 处理WebSocket连接的辅助函数（仅在开发环境中使用）
+
 function handleWebSocketConnection(websocket: WebSocket, request: Request) {
   let siteId: string | null = null;
+  const connManager = getConnectionManager();
 
   websocket.onmessage = async (event) => {
     try {
@@ -70,8 +83,9 @@ function handleWebSocketConnection(websocket: WebSocket, request: Request) {
             return;
           }
 
-          // 检查子域名是否可用
-          if (!connectionManager.isSubdomainAvailable(subdomain, siteId)) {
+          // 检查子域名是否可用（仅在传统连接管理器中）
+          if ('isSubdomainAvailable' in connManager &&
+              !connManager.isSubdomainAvailable(subdomain, siteId)) {
             websocket.send(JSON.stringify({
               type: 'error',
               message: 'Subdomain already in use'
@@ -89,8 +103,10 @@ function handleWebSocketConnection(websocket: WebSocket, request: Request) {
             lastActive: Date.now()
           };
 
-          // 添加连接到管理器
-          connectionManager.addConnection(siteId, websocket, route);
+          // 添加连接到管理器（仅在传统连接管理器中）
+          if ('addConnection' in connManager) {
+            connManager.addConnection(siteId, websocket, route);
+          }
 
           // 发送确认消息
           websocket.send(JSON.stringify({
@@ -129,16 +145,16 @@ function handleWebSocketConnection(websocket: WebSocket, request: Request) {
   };
 
   websocket.onclose = () => {
-    if (siteId) {
-      connectionManager.removeConnection(siteId);
+    if (siteId && 'removeConnection' in connManager) {
+      connManager.removeConnection(siteId);
       console.log(`Site ${siteId} disconnected`);
     }
   };
 
   websocket.onerror = (error) => {
     console.error('WebSocket error:', error);
-    if (siteId) {
-      connectionManager.removeConnection(siteId);
+    if (siteId && 'removeConnection' in connManager) {
+      connManager.removeConnection(siteId);
     }
   };
 
@@ -156,46 +172,57 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     if (body.action === 'status') {
-      // 从全局连接管理器获取状态
-      const connectionManager = (global as any).connectionManager;
+      // 获取连接管理器
+      const connManager = getConnectionManager();
 
-      if (connectionManager) {
-        const stats = connectionManager.getConnectionStats();
-        return Response.json({
+      try {
+        let stats: any;
+
+        if ('getConnectionStats' in connManager && typeof connManager.getConnectionStats === 'function') {
+          // Serverless连接管理器
+          stats = await connManager.getConnectionStats();
+        } else if ('getConnectionStats' in connManager) {
+          // 传统连接管理器
+          stats = (connManager as any).getConnectionStats();
+        } else {
+          // 备用方案
+          stats = { totalConnections: 0, connections: [] };
+        }
+
+        return NextResponse.json({
           success: true,
           connections: {
-            active: stats.totalConnections,
-            total: stats.totalConnections,
-            sites: stats.connections.map((conn: any) => conn.siteId)
+            active: stats.totalConnections || 0,
+            total: stats.totalConnections || 0,
+            sites: stats.connections?.map((conn: any) => conn.siteId) || []
           },
-          routes: stats.connections.map((conn: any) => ({
+          routes: stats.connections?.map((conn: any) => ({
             siteId: conn.siteId,
             subdomain: conn.subdomain,
             targetUrl: conn.targetUrl,
             createdAt: conn.createdAt,
-            lastActive: conn.lastActive
-          })),
-          timestamp: Date.now()
+            lastActive: conn.lastActive,
+            isActive: conn.isActive
+          })) || [],
+          timestamp: Date.now(),
+          environment: isServerlessEnvironment() ? 'serverless' : 'development'
         });
-      } else {
-        // 如果在 Vercel 环境中，返回空状态
-        return Response.json({
+      } catch (statsError) {
+        console.error('获取连接统计失败:', statsError);
+        return NextResponse.json({
           success: true,
-          connections: {
-            active: 0,
-            total: 0,
-            sites: []
-          },
+          connections: { active: 0, total: 0, sites: [] },
           routes: [],
           timestamp: Date.now(),
-          note: 'Running in serverless environment'
+          environment: isServerlessEnvironment() ? 'serverless' : 'development',
+          error: 'Failed to get connection stats'
         });
       }
     }
 
-    return Response.json({ error: 'Unknown action' }, { status: 400 });
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
     console.error('API error:', error);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

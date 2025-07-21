@@ -1,0 +1,35 @@
+{
+  "name": "static-proxy-client",
+  "version": "1.0.0",
+  "description": "Static Proxy Client Library - 支持WebSocket和HTTP轮询两种模式",
+  "main": "smart-client.js",
+  "scripts": {
+    "start": "node smart-client.js",
+    "start:polling": "node client-polling.js",
+    "test": "node test-client.js"
+  },
+  "keywords": [
+    "proxy",
+    "tunnel",
+    "websocket",
+    "polling",
+    "vercel",
+    "serverless"
+  ],
+  "author": "Static Proxy Team",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/static-proxy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/static-proxy/issues"
+  },
+  "homepage": "https://github.com/your-username/static-proxy#readme"
+}

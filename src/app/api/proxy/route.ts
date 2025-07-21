@@ -1,7 +1,6 @@
 // 代理API端点 - 处理用户请求转发
 import { NextRequest } from 'next/server';
-import { connectionManager } from '@/lib/connection-manager';
-import { subdomainRouter } from '@/lib/subdomain-router';
+import { getConnectionManager } from '@/lib/environment';
 import { ProxyRequest } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -42,16 +41,17 @@ async function handleProxyRequest(request: NextRequest): Promise<Response> {
       return new Response('Host header is required', { status: 400 });
     }
 
+    // 获取连接管理器
+    const connManager = getConnectionManager();
+
     // 根据子域名获取站点ID
-    const siteId = subdomainRouter.getSiteIdByHost(host);
-    if (!siteId) {
-      return new Response(`No route configured for host: ${host}`, { status: 404 });
+    let siteId: string | null = null;
+    if ('getSiteIdByHost' in connManager) {
+      siteId = await connManager.getSiteIdByHost(host);
     }
 
-    // 检查是否有活跃连接
-    const connection = connectionManager.getConnection(siteId);
-    if (!connection) {
-      return new Response(`Site ${siteId} is not connected`, { status: 503 });
+    if (!siteId) {
+      return new Response(`No route configured for host: ${host}`, { status: 404 });
     }
 
     // 构建代理请求
@@ -77,7 +77,7 @@ async function handleProxyRequest(request: NextRequest): Promise<Response> {
 
     try {
       // 发送请求到内网站点
-      const proxyResponse = await connectionManager.sendRequest(siteId, proxyRequest);
+      const proxyResponse = await connManager.sendRequest(siteId, proxyRequest);
 
       // 构建响应头
       const responseHeaders = new Headers();

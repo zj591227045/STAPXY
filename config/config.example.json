@@ -1,0 +1,42 @@
+{
+  "admin": {
+    "password": "your_admin_password_here",
+    "sessionTimeout": 3600000,
+    "domain": "yourdomain.com",
+    "allowedOrigins": [
+      "https://yourdomain.com",
+      "https://*.yourdomain.com",
+      "http://localhost:3000"
+    ]
+  },
+  "auth": {
+    "mode": "single",
+    "singleKey": {
+      "key": "your_access_key_here",
+      "description": "Default access key for all sites"
+    },
+    "multiKeys": {
+      "domainMappings": [
+        {
+          "subdomain": "site1",
+          "accessKey": "site1_access_key",
+          "description": "Access key for site1 subdomain"
+        },
+        {
+          "subdomain": "site2",
+          "accessKey": "site2_access_key",
+          "description": "Access key for site2 subdomain"
+        }
+      ],
+      "fallbackKey": {
+        "key": "fallback_access_key",
+        "description": "Fallback key for unmatched subdomains"
+      }
+    }
+  },
+  "proxy": {
+    "maxConnections": 100,
+    "heartbeatInterval": 30000,
+    "connectionTimeout": 60000
+  }
+}

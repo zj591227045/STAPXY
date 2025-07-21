@@ -1,26 +1,49 @@
 # 静态Web代理系统
 
-一个可部署到Vercel等静态托管平台的Web代理服务，支持通过子域名访问内网站点。
+一个可部署到Vercel等静态托管平台的Web代理服务，支持通过子域名访问内网站点。现已支持 **Vercel Edge Functions** 全球部署！
+
+## 🌟 新架构特性
+
+- **🔄 双模式架构**: 开发环境使用WebSocket，生产环境使用HTTP轮询
+- **☁️ Vercel Edge Functions**: 支持全球边缘网络部署
+- **🧠 智能环境检测**: 自动选择最适合的通信模式
+- **📦 Vercel Edge Config**: 生产环境使用免费的Edge Config管理配置
+- **🔧 向后兼容**: 现有客户端代码无需修改
 
 ## 🚀 功能特性
 
 - **静态部署**: 可部署到Vercel、Netlify等静态托管平台
-- **无数据库依赖**: 所有配置通过配置文件管理
+- **无数据库依赖**: 开发环境无需数据库，生产环境使用免费的Edge Config
 - **身份验证**: 管理员密码保护和访问密钥验证
 - **双密钥模式**: 支持单密钥模式和多密钥模式
 - **动态路由**: 客户端动态注册子域名，无需硬编码
 - **子域名路由**: 支持通过子域名访问不同的内网站点
 - **NAT穿透**: 内网站点主动连接，无需公网IP
-- **WebSocket隧道**: 基于WebSocket的长连接隧道
+- **双通信模式**: WebSocket长连接（开发）+ HTTP轮询（生产）
 - **自动重连**: 客户端自动重连和心跳保活
 - **实时监控**: Web管理界面实时显示连接状态和路由信息
 
 ## 🏗️ 系统架构
 
+### 双模式架构
+
+| 环境 | 通信方式 | 状态存储 | 适用场景 |
+|------|----------|----------|----------|
+| **开发环境** | WebSocket长连接 | 内存 | 本地开发、测试 |
+| **生产环境** | HTTP轮询 | Edge Config + 内存 | Vercel部署、全球CDN |
+
+### 开发环境架构
 ```
-内网站点A1 ←→ WebSocket ←→ Vercel Edge Function ←→ 用户浏览器
-内网站点A2 ←→ WebSocket ←→ Vercel Edge Function ←→ 用户浏览器
-内网站点A3 ←→ WebSocket ←→ Vercel Edge Function ←→ 用户浏览器
+内网站点A1 ←→ WebSocket ←→ Next.js Server ←→ 用户浏览器
+内网站点A2 ←→ WebSocket ←→ Next.js Server ←→ 用户浏览器
+内网站点A3 ←→ WebSocket ←→ Next.js Server ←→ 用户浏览器
+```
+
+### 生产环境架构
+```
+内网站点A1 ←→ HTTP轮询 ←→ Vercel Edge Functions ←→ Edge Config + 内存 ←→ 用户浏览器
+内网站点A2 ←→ HTTP轮询 ←→ Vercel Edge Functions ←→ Edge Config + 内存 ←→ 用户浏览器
+内网站点A3 ←→ HTTP轮询 ←→ Vercel Edge Functions ←→ Edge Config + 内存 ←→ 用户浏览器
 ```
 
 **访问方式:**
@@ -81,6 +104,29 @@ npm run dev
 - **多密钥模式**: 每个域名使用专用密钥，支持备用密钥
 
 ### 6. 启动内网客户端
+
+#### 方式1：智能客户端（推荐）
+
+```bash
+cd examples
+npm install
+
+# 智能客户端自动检测环境
+node smart-client.js
+```
+
+或设置环境变量：
+```bash
+export PROXY_URL="http://localhost:3000"
+export SITE_ID="mysite"
+export SUBDOMAIN="mysite"
+export TARGET_URL="http://localhost:8080"
+export ACCESS_KEY="your-access-key"
+
+node smart-client.js
+```
+
+#### 方式2：传统客户端
 
 ```bash
 cd client
@@ -331,6 +377,14 @@ node examples/site2.js
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 打开 Pull Request
+
+## 📚 文档
+
+- [Vercel部署指南](docs/VERCEL_DEPLOYMENT.md) - 详细的Vercel部署步骤
+- [客户端使用指南](docs/CLIENT_USAGE.md) - 客户端配置和使用方法
+- [迁移指南](docs/MIGRATION_GUIDE.md) - 从旧版本迁移到新架构
+- [Edge Config迁移](docs/EDGE_CONFIG_MIGRATION.md) - 从KV到Edge Config的迁移说明
+- [配置指南](CONFIG_GUIDE.md) - 系统配置详细说明
 
 ## 📄 许可证
 

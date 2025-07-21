@@ -52,6 +52,17 @@ export interface RegisterMessage {
   type: 'register';
   siteId: string;
   targetUrl: string;
+  subdomain?: string;
+  accessKey?: string;
+}
+
+export interface DynamicRoute {
+  siteId: string;
+  subdomain: string;
+  targetUrl: string;
+  accessKey: string;
+  createdAt: number;
+  lastActive: number;
 }
 
 export interface ErrorMessage {
@@ -69,8 +80,11 @@ export type WebSocketMessage =
 
 export interface ConnectionManager {
   connections: Map<string, TunnelConnection>;
-  addConnection(siteId: string, websocket: WebSocket): void;
+  addConnection(siteId: string, websocket: WebSocket, route: DynamicRoute): void;
   removeConnection(siteId: string): void;
   getConnection(siteId: string): TunnelConnection | undefined;
   sendRequest(siteId: string, request: ProxyRequest): Promise<ProxyResponse>;
+  isSubdomainAvailable(subdomain: string, currentSiteId?: string): boolean;
+  getConnectionStats(): { totalConnections: number; connections: any[] };
+  getAllRoutes(): DynamicRoute[];
 }

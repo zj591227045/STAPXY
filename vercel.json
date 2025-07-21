@@ -1,34 +1,35 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/websocket",
-      "dest": "/api/websocket"
-    },
-    {
-      "src": "/api/proxy",
-      "dest": "/api/proxy"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
   "functions": {
     "src/app/api/websocket/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/proxy/route.ts": {
       "maxDuration": 30
+    },
+    "src/app/api/client/poll/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/client/response/route.ts": {
+      "maxDuration": 10
     }
   },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-Requested-With" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!api|_next|favicon.ico).*)",
+      "destination": "/api/proxy"
+    }
+  ],
   "env": {
-    "PROXY_ROUTES": "site1:a1.yourdomain.com:http://localhost:3001,site2:a2.yourdomain.com:http://localhost:3002,site3:a3.yourdomain.com:http://localhost:3003"
+    "PROXY_ROUTES": "site1:a1.yourdomain.com:https://api1.example.com,site2:a2.yourdomain.com:https://api2.example.com"
   }
 }
