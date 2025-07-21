@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminLogin from '@/components/AdminLogin';
-import AdminPanel from '@/components/AdminPanel';
+import AdminLogin from '../components/AdminLogin';
+import AdminPanel from '../components/AdminPanel';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

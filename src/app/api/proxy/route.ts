@@ -1,7 +1,7 @@
 // 代理API端点 - 处理用户请求转发
 import { NextRequest } from 'next/server';
-import { getConnectionManager } from '@/lib/environment';
-import { ProxyRequest } from '@/types';
+import { getConnectionManager } from '../../../lib/environment';
+import { ProxyRequest } from '../../../types';
 import { v4 as uuidv4 } from 'uuid';
 
 // 处理所有HTTP方法

@@ -1,6 +1,6 @@
 // Next.js中间件 - 处理请求路由
 import { NextRequest, NextResponse } from 'next/server';
-import { subdomainRouter } from '@/lib/subdomain-router';
+import { subdomainRouter } from './lib/subdomain-router';
 
 // 简化的管理域名检查（避免在Edge Runtime中使用Node.js模块）
 function isAdminDomain(host: string): boolean {

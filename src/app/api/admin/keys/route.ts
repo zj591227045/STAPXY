@@ -1,7 +1,7 @@
 // 管理员访问密钥API端点
 import { NextRequest } from 'next/server';
-import { configManager } from '@/lib/config-manager';
-import { verifyAdminAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
+import { configManager } from '../../../../lib/config-manager';
+import { verifyAdminAuth, createErrorResponse, createSuccessResponse } from '../../../../lib/auth';
 
 // 获取访问密钥列表
 export async function GET(request: NextRequest) {

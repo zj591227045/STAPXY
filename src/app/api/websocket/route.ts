@@ -1,9 +1,9 @@
 // WebSocket API端点 - 处理内网站点连接（开发环境）或返回轮询信息（生产环境）
 import { NextRequest, NextResponse } from 'next/server';
-import { getConnectionManager, isServerlessEnvironment } from '@/lib/environment';
-import { DynamicRoute } from '@/types';
-import { WebSocketMessage, RegisterMessage } from '@/types';
-import { verifyAccessKey } from '@/lib/auth';
+import { getConnectionManager, isServerlessEnvironment } from '../../../lib/environment';
+import { DynamicRoute } from '../../../types';
+import { WebSocketMessage, RegisterMessage } from '../../../types';
+import { verifyAccessKey } from '../../../lib/auth';
 
 export async function GET(request: NextRequest) {
   // 在serverless环境中，返回轮询信息而不是WebSocket升级

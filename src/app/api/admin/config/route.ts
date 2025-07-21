@@ -1,7 +1,7 @@
 // 管理员配置API端点
 import { NextRequest } from 'next/server';
-import { configManager } from '@/lib/config-manager';
-import { verifyAdminAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
+import { configManager } from '../../../../lib/config-manager';
+import { verifyAdminAuth, createErrorResponse, createSuccessResponse } from '../../../../lib/auth';
 
 // 获取配置信息
 export async function GET(request: NextRequest) {

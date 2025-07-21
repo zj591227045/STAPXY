@@ -1,7 +1,7 @@
 // 管理员状态API端点
 import { NextRequest } from 'next/server';
-import { connectionManager } from '@/lib/connection-manager';
-import { verifyAdminAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
+import { connectionManager } from '../../../../lib/connection-manager';
+import { verifyAdminAuth, createErrorResponse, createSuccessResponse } from '../../../../lib/auth';
 
 // 获取系统状态
 export async function GET(request: NextRequest) {

@@ -1,7 +1,7 @@
 // 管理员登录API端点
 import { NextRequest } from 'next/server';
-import { configManager } from '@/lib/config-manager';
-import { sessionManager, createErrorResponse, createSuccessResponse } from '@/lib/auth';
+import { configManager } from '../../../../lib/config-manager';
+import { sessionManager, createErrorResponse, createSuccessResponse } from '../../../../lib/auth';
 
 // 处理登录请求
 export async function POST(request: NextRequest) {

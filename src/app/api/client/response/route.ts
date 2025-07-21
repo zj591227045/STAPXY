@@ -1,8 +1,8 @@
 // 客户端响应API端点 - 处理客户端提交的响应
 import { NextRequest, NextResponse } from 'next/server';
-import { getConnectionManager } from '@/lib/environment';
-import { verifyAccessKey } from '@/lib/auth';
-import { ProxyResponse } from '@/types';
+import { getConnectionManager } from '../../../../lib/environment';
+import { verifyAccessKey } from '../../../../lib/auth';
+import { ProxyResponse } from '../../../../types';
 
 // 处理客户端提交响应
 export async function POST(request: NextRequest) {

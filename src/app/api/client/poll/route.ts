@@ -1,7 +1,7 @@
 // 客户端轮询API端点 - 处理客户端轮询请求
 import { NextRequest, NextResponse } from 'next/server';
-import { getConnectionManager } from '@/lib/environment';
-import { verifyAccessKey } from '@/lib/auth';
+import { getConnectionManager } from '../../../../lib/environment';
+import { verifyAccessKey } from '../../../../lib/auth';
 
 // 处理客户端轮询请求
 export async function POST(request: NextRequest) {
